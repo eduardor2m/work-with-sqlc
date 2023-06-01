@@ -3,7 +3,7 @@ package router
 import (
 	"context"
 	"database/sql"
-	db "github.com/eduardor2m/work-with-sqlc/db/sqlc"
+	"github.com/eduardor2m/work-with-sqlc/src/infra/sqlite/bridge"
 	"github.com/labstack/echo/v4"
 	_ "github.com/mattn/go-sqlite3"
 	"strconv"
@@ -21,7 +21,7 @@ func dbInit() (*sql.DB, error) {
 		return nil, err
 	}
 
-	_, err = conn.Exec("CREATE TABLE IF NOT EXISTS authors (id INTEGER PRIMARY KEY, name TEXT NOT NULL, bio TEXT);")
+	_, err = conn.Exec("CREATE TABLE IF NOT EXISTS author (id INTEGER PRIMARY KEY, name TEXT NOT NULL, bio TEXT);")
 
 	if err != nil {
 		return nil, err
@@ -72,9 +72,9 @@ func (h *authorHandlers) CreateAuthor(c echo.Context) error {
 	}
 
 	ctx := context.Background()
-	queries := db.New(conn)
+	queries := bridge.New(conn)
 
-	author, err := queries.CreateAuthor(ctx, db.CreateAuthorParams{
+	author, err := queries.CreateAuthor(ctx, bridge.CreateAuthorParams{
 		Name: a.Name,
 		Bio: sql.NullString{
 			String: a.Bio,
@@ -98,7 +98,7 @@ func (h *authorHandlers) GetAuthor(c echo.Context) error {
 		return err
 	}
 
-	queries := db.New(conn)
+	queries := bridge.New(conn)
 
 	idToInt64, err := strconv.ParseInt(id, 10, 64)
 
@@ -122,7 +122,7 @@ func (h *authorHandlers) ListAuthors(c echo.Context) error {
 		return err
 	}
 
-	queries := db.New(conn)
+	queries := bridge.New(conn)
 
 	authors, err := queries.ListAuthors(context.Background())
 
@@ -142,7 +142,7 @@ func (h *authorHandlers) DeleteAuthor(c echo.Context) error {
 		return err
 	}
 
-	queries := db.New(conn)
+	queries := bridge.New(conn)
 
 	idToInt64, err := strconv.ParseInt(id, 10, 64)
 
@@ -168,7 +168,7 @@ func (h *authorHandlers) DeleteAllAuthors(c echo.Context) error {
 		return err
 	}
 
-	queries := db.New(conn)
+	queries := bridge.New(conn)
 
 	ctx := context.Background()
 

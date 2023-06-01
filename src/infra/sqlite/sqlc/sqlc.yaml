@@ -1,0 +1,9 @@
+version: 2
+sql:
+  - engine: "sqlite"
+    schema: "../../../../tools/database/schema.sql"
+    queries: "./queries/author.sql"
+    gen:
+      go:
+        package: "bridge"
+        out: "../bridge"
