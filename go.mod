@@ -3,6 +3,7 @@ module github.com/eduardor2m/work-with-sqlc
 go 1.20
 
 require (
+	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/labstack/echo/v4 v4.10.2 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

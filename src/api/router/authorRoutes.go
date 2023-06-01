@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"database/sql"
+	"github.com/eduardor2m/work-with-sqlc/src/infra/sqlite"
 	"github.com/eduardor2m/work-with-sqlc/src/infra/sqlite/bridge"
 	"github.com/labstack/echo/v4"
 	_ "github.com/mattn/go-sqlite3"
@@ -12,22 +13,6 @@ import (
 type Author struct {
 	Name string `json:"name"`
 	Bio  string `json:"bio"`
-}
-
-func dbInit() (*sql.DB, error) {
-	conn, err := sql.Open("sqlite3", "./authors.db")
-
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = conn.Exec("CREATE TABLE IF NOT EXISTS author (id INTEGER PRIMARY KEY, name TEXT NOT NULL, bio TEXT);")
-
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, nil
 }
 
 func loadAuthorRoutes(group *echo.Group) {
@@ -65,11 +50,13 @@ func (h *authorHandlers) CreateAuthor(c echo.Context) error {
 		return err
 	}
 
-	conn, err := dbInit()
+	conn, err := sqlite.GetConnection()
 
 	if err != nil {
 		return err
 	}
+
+	defer sqlite.CloseConnection(conn)
 
 	ctx := context.Background()
 	queries := bridge.New(conn)
@@ -92,11 +79,13 @@ func (h *authorHandlers) CreateAuthor(c echo.Context) error {
 func (h *authorHandlers) GetAuthor(c echo.Context) error {
 	id := c.Param("id")
 
-	conn, err := dbInit()
+	conn, err := sqlite.GetConnection()
 
 	if err != nil {
 		return err
 	}
+
+	defer sqlite.CloseConnection(conn)
 
 	queries := bridge.New(conn)
 
@@ -116,11 +105,13 @@ func (h *authorHandlers) GetAuthor(c echo.Context) error {
 }
 
 func (h *authorHandlers) ListAuthors(c echo.Context) error {
-	conn, err := dbInit()
+	conn, err := sqlite.GetConnection()
 
 	if err != nil {
 		return err
 	}
+
+	defer sqlite.CloseConnection(conn)
 
 	queries := bridge.New(conn)
 
@@ -136,11 +127,13 @@ func (h *authorHandlers) ListAuthors(c echo.Context) error {
 func (h *authorHandlers) DeleteAuthor(c echo.Context) error {
 	id := c.Param("id")
 
-	conn, err := dbInit()
+	conn, err := sqlite.GetConnection()
 
 	if err != nil {
 		return err
 	}
+
+	defer sqlite.CloseConnection(conn)
 
 	queries := bridge.New(conn)
 
@@ -162,11 +155,13 @@ func (h *authorHandlers) DeleteAuthor(c echo.Context) error {
 }
 
 func (h *authorHandlers) DeleteAllAuthors(c echo.Context) error {
-	conn, err := dbInit()
+	conn, err := sqlite.GetConnection()
 
 	if err != nil {
 		return err
 	}
+
+	defer sqlite.CloseConnection(conn)
 
 	queries := bridge.New(conn)
 
