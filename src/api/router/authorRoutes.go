@@ -30,142 +30,153 @@ func dbInit() (*sql.DB, error) {
 	return conn, nil
 }
 
-func dbCreateAuthor(conn *sql.DB, name string, bio string) (*db.Author, error) {
+func loadAuthorRoutes(group *echo.Group) {
+	authorGroup := group.Group("/author")
+	authorGroup.POST("", NewAuthorHandlers().CreateAuthor)
+
+	authorGroup.GET("/:id", NewAuthorHandlers().GetAuthor)
+
+	authorGroup.GET("", NewAuthorHandlers().ListAuthors)
+
+	authorGroup.DELETE("/:id", NewAuthorHandlers().DeleteAuthor)
+
+	authorGroup.DELETE("", NewAuthorHandlers().DeleteAllAuthors)
+}
+
+type AuthorHandlers interface {
+	CreateAuthor(c echo.Context) error
+	GetAuthor(c echo.Context) error
+	ListAuthors(c echo.Context) error
+	DeleteAuthor(c echo.Context) error
+	DeleteAllAuthors(c echo.Context) error
+}
+
+type authorHandlers struct{}
+
+func NewAuthorHandlers() AuthorHandlers {
+	return &authorHandlers{}
+}
+
+func (h *authorHandlers) CreateAuthor(c echo.Context) error {
+	a := Author{}
+
+	if err := c.Bind(&a); err != nil {
+
+		return err
+	}
+
+	conn, err := dbInit()
+
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
 	queries := db.New(conn)
 
 	author, err := queries.CreateAuthor(ctx, db.CreateAuthorParams{
-		Name: name,
+		Name: a.Name,
 		Bio: sql.NullString{
-			String: bio,
+			String: a.Bio,
 			Valid:  true,
 		},
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &author, nil
+	return c.JSON(200, author)
 }
 
-func loadAuthorRoutes(group *echo.Group) {
-	authorGroup := group.Group("/author")
-	authorGroup.POST("", func(c echo.Context) error {
+func (h *authorHandlers) GetAuthor(c echo.Context) error {
+	id := c.Param("id")
 
-		a := Author{}
+	conn, err := dbInit()
 
-		if err := c.Bind(&a); err != nil {
+	if err != nil {
+		return err
+	}
 
-			return err
-		}
+	queries := db.New(conn)
 
-		conn, err := dbInit()
+	idToInt64, err := strconv.ParseInt(id, 10, 64)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		author, err := dbCreateAuthor(conn, a.Name, a.Bio)
+	author, err := queries.GetAuthor(context.Background(), idToInt64)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		return c.JSON(200, author)
+	return c.JSON(200, author)
+}
 
-	})
+func (h *authorHandlers) ListAuthors(c echo.Context) error {
+	conn, err := dbInit()
 
-	authorGroup.GET("/:id", func(c echo.Context) error {
-		id := c.Param("id")
+	if err != nil {
+		return err
+	}
 
-		conn, err := dbInit()
+	queries := db.New(conn)
 
-		if err != nil {
-			return err
-		}
+	authors, err := queries.ListAuthors(context.Background())
 
-		queries := db.New(conn)
+	if err != nil {
+		return err
+	}
 
-		idToInt64, err := strconv.ParseInt(id, 10, 64)
+	return c.JSON(200, authors)
+}
 
-		if err != nil {
-			return err
-		}
+func (h *authorHandlers) DeleteAuthor(c echo.Context) error {
+	id := c.Param("id")
 
-		author, err := queries.GetAuthor(context.Background(), idToInt64)
+	conn, err := dbInit()
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		return c.JSON(200, author)
-	})
+	queries := db.New(conn)
 
-	authorGroup.GET("", func(c echo.Context) error {
-		conn, err := dbInit()
+	idToInt64, err := strconv.ParseInt(id, 10, 64)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		queries := db.New(conn)
+	ctx := context.Background()
 
-		authors, err := queries.ListAuthors(context.Background())
+	err = queries.DeleteAuthor(ctx, idToInt64)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		return c.JSON(200, authors)
+	return c.JSON(200, "Author deleted")
+}
 
-	})
+func (h *authorHandlers) DeleteAllAuthors(c echo.Context) error {
+	conn, err := dbInit()
 
-	authorGroup.DELETE("/:id", func(c echo.Context) error {
-		id := c.Param("id")
+	if err != nil {
+		return err
+	}
 
-		conn, err := dbInit()
+	queries := db.New(conn)
 
-		if err != nil {
-			return err
-		}
+	ctx := context.Background()
 
-		queries := db.New(conn)
+	err = queries.DeleteAllAuthors(ctx)
 
-		idToInt64, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		return err
+	}
 
-		if err != nil {
-			return err
-		}
-
-		ctx := context.Background()
-
-		err = queries.DeleteAuthor(ctx, idToInt64)
-
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(200, "Author deleted")
-	})
-
-	authorGroup.DELETE("", func(c echo.Context) error {
-		conn, err := dbInit()
-
-		if err != nil {
-			return err
-		}
-
-		queries := db.New(conn)
-
-		ctx := context.Background()
-
-		err = queries.DeleteAllAuthors(ctx)
-
-		if err != nil {
-			return err
-		}
-
-		return c.JSON(200, "All authors deleted")
-	})
+	return c.JSON(200, "All authors deleted")
 }
