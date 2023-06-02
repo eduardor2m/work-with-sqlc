@@ -3,16 +3,19 @@ package sqlite
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/gommon/log"
+
+	_ "github.com/lib/pq"
 )
 
 func GetConnection() (*sqlx.DB, error) {
-	conn, err := sqlx.Connect("sqlite3", "./sqlite.db")
+	connStr := "postgres://root:root@localhost/mydb?sslmode=disable"
+	conn, err := sqlx.Connect("postgres", connStr)
 
 	if err != nil {
 		return nil, err
 	}
 
-	str := "CREATE TABLE IF NOT EXISTS author (id INTEGER PRIMARY KEY, name TEXT NOT NULL, bio TEXT);"
+	str := "CREATE TABLE IF NOT EXISTS author (id SERIAL PRIMARY KEY, name TEXT NOT NULL, bio TEXT);"
 
 	statement, err := conn.Prepare(str)
 

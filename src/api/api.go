@@ -24,7 +24,7 @@ func NewAPI(options *Options) API {
 }
 func (instance *api) Serve() {
 	instance.loadRoutes()
-	instance.echoInstance.Logger.Fatal(instance.echoInstance.Start(":8080"))
+	instance.echoInstance.Logger.Fatal(instance.echoInstance.Start(":9090"))
 }
 
 func (instance *api) loadRoutes() {

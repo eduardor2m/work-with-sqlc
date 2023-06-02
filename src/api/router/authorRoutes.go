@@ -6,7 +6,7 @@ import (
 	"github.com/eduardor2m/work-with-sqlc/src/infra/sqlite"
 	"github.com/eduardor2m/work-with-sqlc/src/infra/sqlite/bridge"
 	"github.com/labstack/echo/v4"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 	"strconv"
 )
 
@@ -91,11 +91,13 @@ func (h *authorHandlers) GetAuthor(c echo.Context) error {
 
 	idToInt64, err := strconv.ParseInt(id, 10, 64)
 
+	idToInt32 := int32(idToInt64)
+
 	if err != nil {
 		return err
 	}
 
-	author, err := queries.GetAuthor(context.Background(), idToInt64)
+	author, err := queries.GetAuthor(context.Background(), idToInt32)
 
 	if err != nil {
 		return err
@@ -139,13 +141,15 @@ func (h *authorHandlers) DeleteAuthor(c echo.Context) error {
 
 	idToInt64, err := strconv.ParseInt(id, 10, 64)
 
+	idToInt32 := int32(idToInt64)
+
 	if err != nil {
 		return err
 	}
 
 	ctx := context.Background()
 
-	err = queries.DeleteAuthor(ctx, idToInt64)
+	err = queries.DeleteAuthor(ctx, idToInt32)
 
 	if err != nil {
 		return err

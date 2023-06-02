@@ -11,7 +11,12 @@ import (
 )
 
 const createAuthor = `-- name: CreateAuthor :one
-INSERT INTO author (name, bio) VALUES (?, ?) RETURNING id, name, bio
+INSERT INTO author (
+    name, bio
+) VALUES (
+             $1, $2
+         )
+RETURNING id, name, bio
 `
 
 type CreateAuthorParams struct {
@@ -36,19 +41,21 @@ func (q *Queries) DeleteAllAuthors(ctx context.Context) error {
 }
 
 const deleteAuthor = `-- name: DeleteAuthor :exec
-DELETE FROM author WHERE id = ?
+DELETE FROM author
+WHERE id = $1
 `
 
-func (q *Queries) DeleteAuthor(ctx context.Context, id int64) error {
+func (q *Queries) DeleteAuthor(ctx context.Context, id int32) error {
 	_, err := q.db.ExecContext(ctx, deleteAuthor, id)
 	return err
 }
 
 const getAuthor = `-- name: GetAuthor :one
-SELECT id, name, bio FROM author WHERE id = ? LIMIT 1
+SELECT id, name, bio FROM author
+WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetAuthor(ctx context.Context, id int64) (Author, error) {
+func (q *Queries) GetAuthor(ctx context.Context, id int32) (Author, error) {
 	row := q.db.QueryRowContext(ctx, getAuthor, id)
 	var i Author
 	err := row.Scan(&i.ID, &i.Name, &i.Bio)
@@ -56,7 +63,8 @@ func (q *Queries) GetAuthor(ctx context.Context, id int64) (Author, error) {
 }
 
 const listAuthors = `-- name: ListAuthors :many
-SELECT id, name, bio FROM author ORDER BY name
+SELECT id, name, bio FROM author
+ORDER BY name
 `
 
 func (q *Queries) ListAuthors(ctx context.Context) ([]Author, error) {
